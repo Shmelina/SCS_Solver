@@ -7,6 +7,12 @@ using namespace std;
 
 string string_revert(string str)
 {
+	if (str.size() <= 1)
+	{
+		throw invalid_argument("R U rTARD?");
+		exit(-1);
+	}
+
 	int str_size = str.size() - 1;
 	for (int i = 0; i < (str_size + 1) / 2; i++)
 	{
@@ -14,6 +20,7 @@ string string_revert(string str)
 		str[i] = str[str_size - i];
 		str[str_size - i] = ch;
 	}
+
 	return str;
 }
 
@@ -21,12 +28,13 @@ class bin_vect
 {
 	vector<bool> vect;
 	int max_val;
+	int size;
 
 	int bin_to_int_v(vector<bool> v)
 	{
 		int result = 0;
 
-		for (int i = 0; i < v.size(); i++)
+		for (size_t i = 0; i < v.size(); i++)
 		{
 			result += v[i] * pow(2, i);
 		}
@@ -36,6 +44,7 @@ class bin_vect
 public:
 	bin_vect(int size)
 	{
+		this->size = size;
 		vect.resize(size, true);
 		max_val = bin_to_int_v(vect);
 		clear();
@@ -49,10 +58,8 @@ public:
 	}
 	void clear()
 	{
-		for (auto i : vect)
-		{
-			i = false;
-		}
+		vect.clear();
+		vect.resize(size);
 	}
 	void int_to_bin(int val)
 	{
@@ -60,7 +67,7 @@ public:
 		if (val > max_val || val < 0)
 		{
 			throw invalid_argument("R U rTARD?");
-			return;
+			exit(-1);
 		}
 
 		for (int i = vect.size() - 1; i >= 0; i--)
@@ -85,10 +92,10 @@ public:
 		if(str.size() > vect.size())
 		{
 			throw invalid_argument("R U rTARD?");
-			return;
+			exit(-1);
 		}
 
-		for (int i = 0; i < str.size(); i++)
+		for (size_t i = 0; i < str.size(); i++)
 		{
 			vect[i] = (bool)((int)str[i] - 48);
 		}
@@ -102,6 +109,70 @@ public:
 };
 
 
+class matrix_reshape
+{
+	vector<vector<char>> matrix;
+	vector<vector<char>> result;
+	int xs_size, ys_size;
+public:
+	matrix_reshape(string filename)
+	{
+		ifstream file(filename);
+		char ch;
+		file.read(&ch, 1);
+		xs_size = ch - 48;
+		file.read(&ch, 1);
+		file.read(&ch, 1);
+		ys_size = ch - 48;
+
+		int xs_pow = pow(2, xs_size);
+		int ys_pow = pow(2, ys_size);
+		matrix.resize(xs_pow, vector<char>(ys_pow, ' '));
+		file.seekg(file.beg);
+		file.seekg(2);
+		string tmp_str;
+
+		for (int j = 0; j < ys_pow + ys_size; j++)
+		{
+			if (j >= 4)
+			{
+				file >> tmp_str;
+				for (int i = 0; i < 2 * (xs_pow + xs_size); i += 2)
+				{
+					if (i >= 2 * xs_size)
+					{
+						matrix[j - ys_size][i / 2 - xs_size] = tmp_str[i];
+					}
+				}
+			}
+			else
+			{
+				file >> tmp_str;
+			}
+		}
+		file.close();
+	}
+
+	void print_src()
+	{
+		for (auto& s : matrix)
+		{
+			for (auto& i : s)
+			{
+				cout << i << ";";
+			}
+			cout << endl;
+		}
+	}
+
+	void reshape(string str)
+	{
+
+	}
+
+};
+
+
 int main()
 {
 	bin_vect A(8);
@@ -111,16 +182,10 @@ int main()
 	A.clear();
 	cout << A.bin_to_int() << endl;
 
-	/*string filename;
+	string filename;
 	cout << "Filename: ";
 	cin >> filename;
-	ifstream file(filename);
-	char ch;
-	while (!file.eof())
-	{
-		file.read(&ch, 1);
-		cout << ch;
-	}
-	file.close();
-	cout << endl;*/
+	
+	matrix_reshape m(filename);
+	m.print_src();
 }
