@@ -24,11 +24,10 @@ string string_revert(string str)
 	return str;
 }
 
-class bin_vect
+class bit_vect
 {
-	vector<bool> vect;
 	int max_val;
-	int size;
+	int v_size;
 
 	int bin_to_int_v(vector<bool> v)
 	{
@@ -41,26 +40,47 @@ class bin_vect
 
 		return result;
 	}
+
 public:
-	bin_vect(int size)
+
+	vector<bool> vect;
+
+	bit_vect()
 	{
-		this->size = size;
+		v_size = 0;
+		max_val = 0;
+	}
+
+	bit_vect(int size)
+	{
+		this->v_size = size;
 		vect.resize(size, true);
 		max_val = bin_to_int_v(vect);
 		clear();
 	}
-	bin_vect(string str)
+
+	bit_vect(string str)
 	{
 		vect.resize(str.size());
 		max_val = bin_to_int_v(vect);
 		clear();
 		string_to_bin(str);
 	}
+
 	void clear()
 	{
 		vect.clear();
-		vect.resize(size);
+		vect.resize(v_size);
 	}
+
+	void resize(int size)
+	{
+		this->v_size = size;
+		vect.resize(size, true);
+		max_val = bin_to_int_v(vect);
+		clear();
+	}
+
 	void int_to_bin(int val)
 	{
 		clear();
@@ -106,6 +126,69 @@ public:
 		int result = bin_to_int_v(vect);
 		return result;
 	}
+
+	int size()
+	{
+		return v_size;
+	}
+};
+
+
+class coordinate
+{
+	bit_vect x, y;
+
+public:
+
+	bit_vect x_res, y_res;
+
+	coordinate(bit_vect X, bit_vect Y) : x(X), y(Y) {};
+
+	void setbv(bit_vect X, bit_vect Y)
+	{
+		x = X;
+		y = Y;
+	}
+
+	void seti(int X, int Y)
+	{
+		x.int_to_bin(X);
+		y.int_to_bin(Y);
+	}
+
+	//φε υσινÿ
+	void recalc(vector<int> rx, vector<int> ry)
+	{
+		x_res.resize(rx.size());
+		y_res.resize(ry.size());
+
+		for (int i = 0; i < rx.size(); i++)
+		{
+			if (rx[i] <= (x.size() - 1))
+			{
+				x_res.vect[i] = x.vect[rx[i]];
+			}
+			else
+			{
+				x_res.vect[i] = y.vect[rx[i] - x.size()];
+			}
+		}
+
+		for (int i = 0; i < ry.size(); i++)
+		{
+			int pos;
+			if (ry[i] <= (x.size() - 1))
+			{
+				pos = ry[i];
+				y_res.vect[i] = x.vect[pos];
+			}
+			else
+			{
+				pos = ry[i] - x.size();
+				y_res.vect[i] = y.vect[pos];
+			}
+		}
+	}
 };
 
 
@@ -114,7 +197,9 @@ class matrix_reshape
 	vector<vector<char>> matrix;
 	vector<vector<char>> result;
 	int xs_size, ys_size;
+
 public:
+
 	matrix_reshape(string filename)
 	{
 		ifstream file(filename);
@@ -167,7 +252,74 @@ public:
 
 	void reshape(string str)
 	{
+		vector<int> x_dems, y_dems;
+		bool is_x = true;
+		for (auto& c : str)
+		{
+			if (is_x)
+			{
+				if (c == ';')
+				{
+					is_x = false;
+				}
+				else
+				{
+					if (c != ',')
+					{
+						if (isalnum(c))
+							x_dems.push_back(c - 49);
+					}
+				}
 
+			}
+			else
+			{
+				if (c == ';')
+				{
+					break;
+				}
+				else
+				{
+					if (c != ',')
+					{
+						if (isalnum(c))
+							y_dems.push_back(c - 49);
+					}
+				}
+			}
+		}
+
+		int x_res_size = pow(2, x_dems.size());
+		int y_res_size = pow(2, y_dems.size());
+		result.resize(x_res_size, vector<char>(y_res_size, ' '));
+
+		bit_vect a(xs_size);
+		bit_vect b(ys_size);
+		coordinate cc(a, b);
+		int newx, newy;
+
+		for (int i = 0; i < pow(2, ys_size); i++)
+		{
+			for (int j = 0; j < pow(2, xs_size); j++) 
+			{
+				cc.seti(i, j);
+				cc.recalc(x_dems, y_dems);
+				newx = cc.x_res.bin_to_int();
+				newy = cc.y_res.bin_to_int();
+				result[newx][newy] = matrix[j][i];
+			}
+		}
+
+		for (int i = 0; i < y_res_size; i++)
+		{
+			for (int j = 0; j < x_res_size; j++)
+			{
+				cout << result[j][i] << ";";
+			}
+			cout << endl;
+		}
+		
+		
 	}
 
 };
@@ -175,17 +327,38 @@ public:
 
 int main()
 {
-	bin_vect A(8);
+	/*bit_vect A(8);
 	A.int_to_bin(251);
 	A.string_to_bin("0111");
+	A.vect[5] = true;
 	cout << A.bin_to_int() << endl;
 	A.clear();
-	cout << A.bin_to_int() << endl;
+	cout << A.bin_to_int() << endl;*/
+
+
+	/*bit_vect a(4);
+	bit_vect b(4);
+	a.string_to_bin("0111");
+	b.string_to_bin("0110");
+
+	coordinate C(a, b);
+
+	vector<int> aa = { 2,3,4 };
+	vector<int> bb = { 5,6,7,0,1 };
+
+	C.recalc(aa, bb);
+
+	C.x_res.clear();
+	C.y_res.clear();*/
 
 	string filename;
 	cout << "Filename: ";
 	cin >> filename;
-	
+
 	matrix_reshape m(filename);
 	m.print_src();
+	string reshape_str;
+	cout << "Input sequence: ";
+	cin >> reshape_str;
+	m.reshape(reshape_str);
 }
